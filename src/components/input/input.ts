@@ -284,19 +284,24 @@ export class TextInput extends BaseInput<string> implements IonicFormInput {
       return;
     }
 
-    const blurOnScroll = config.getBoolean('hideCaretOnScroll', false);
-    if (blurOnScroll) {
+    const hideCaretOnScroll = config.getBoolean('hideCaretOnScroll', false);
+    if (hideCaretOnScroll) {
       this._enableHideCaretOnScroll();
     }
-
-    const resizeAssist = config.getBoolean('resizeAssist', false);
-    if (resizeAssist) {
-      this._keyboardHeight = 60;
-      this._enableResizeAssist();
+    const win = _plt.win() as any;
+    const keyboardPlugin = win.Ionic && win.Ionic.keyboardPlugin;
+    if (keyboardPlugin) {
+      const keyboardResizes = config.getBoolean('keyboardResizes', false);
+      if (keyboardResizes) {
+        this._keyboardHeight = config.getNumber('keyboardSafeArea', 60);
+        this._enableScrollMove();
+      } else {
+        this._enableScrollPadding();
+        this._enableScrollMove();
+      }
 
     } else {
       this._useAssist = config.getBoolean('scrollAssist', false);
-
       const usePadding = config.getBoolean('scrollPadding', this._useAssist);
       if (usePadding) {
         this._enableScrollPadding();
@@ -528,10 +533,11 @@ export class TextInput extends BaseInput<string> implements IonicFormInput {
 
     this.ionFocus.subscribe(() => {
       const content = this._content;
-
-      // add padding to the bottom of the scroll view (if needed)
-      content.addScrollPadding(this._getScrollData().scrollPadding);
-      content.clearScrollPaddingFocusOut();
+      const scrollPadding = this._getScrollData().scrollPadding;
+      content.addScrollPadding(scrollPadding);
+    });
+    this.ionBlur.subscribe(() => {
+      this._content.addScrollPadding(0);
     });
   }
 
@@ -560,13 +566,13 @@ export class TextInput extends BaseInput<string> implements IonicFormInput {
     }
   }
 
-  _enableResizeAssist() {
+  _enableScrollMove() {
     assert(this._content, 'content is undefined');
 
     console.debug('Input: enableAutoScroll');
     this.ionFocus.subscribe(() => {
       const scrollData = this._getScrollData();
-      if (Math.abs(scrollData.scrollAmount) > 100) {
+      if (Math.abs(scrollData.scrollAmount) > 4) {
         this._content.scrollTo(0, scrollData.scrollTo, scrollData.scrollDuration);
       }
     });
@@ -722,7 +728,8 @@ export function getScrollData(
   inputOffsetHeight: number,
   scrollViewDimensions: ContentDimensions,
   keyboardHeight: number,
-  plaformHeight: number): ScrollData {
+  plaformHeight: number
+): ScrollData {
   // compute input's Y values relative to the body
   const inputTop = (inputOffsetTop + scrollViewDimensions.contentTop - scrollViewDimensions.scrollTop);
   const inputBottom = (inputTop + inputOffsetHeight);
