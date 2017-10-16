@@ -77,6 +77,7 @@ import { ViewController } from '../../navigation/view-controller';
  * Where `tab1Root`, `tab2Root`, and `tab3Root` are each a page:
  *
  *```ts
+   @IonicPage()
  * @Component({
  *   templateUrl: 'build/pages/tabs/tabs.html'
  * })
