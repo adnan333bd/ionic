@@ -8,12 +8,13 @@
  * @usage
  * ```ts
  * import { NavParams } from 'ionic-angular';
+ * import { IUserParms } from './user-parms.model';
  *
  * export class MyClass{
- *
+ *  private userParams: IUserParams;
  *  constructor(navParams: NavParams){
  *    // userParams is an object we have in our nav-parameters
- *    navParams.get('userParams');
+ *    this.userParams = navParams.get('userParams');
  *  }
  *
  * }
